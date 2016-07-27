@@ -3,6 +3,7 @@ package com.oviyum.awscognito;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -14,19 +15,25 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.auth.CognitoCredentialsProvider;
+import com.amazonaws.auth.policy.Principal;
 import com.amazonaws.mobileconnectors.apigateway.ApiClientFactory;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.cognitoidentity.AmazonCognitoIdentity;
 import com.amazonaws.services.cognitoidentity.AmazonCognitoIdentityClient;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oviyum.fleetfoot.FleetMobileClient;
 import com.oviyum.fleetfoot.model.LoginRequest;
 import com.oviyum.fleetfoot.model.LoginResponse;
+import com.oviyum.fleetfoot.model.MenuResponse;
 import com.oviyum.fleetfoot.model.SetLocationRequest;
 import com.oviyum.fleetfoot.model.SetLocationRequestLocationItem;
 import com.oviyum.fleetfoot.model.SetLocationRequestOwnerItem;
 import com.oviyum.fleetfoot.model.SetLocationResponse;
 import com.amazonaws.services.cognitoidentity.*;
 import com.amazonaws.services.cognitoidentity.model.*;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private GetOpenIdTokenRequest tokenRequest;
    // GetOpenIdTokenForDeveloperIdentityRequest;
 
+    ObjectMapper mapper = new ObjectMapper();
 
     private Button button;
     private TextView textview;
@@ -74,8 +82,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         textview = (TextView)findViewById(R.id.loation_tv);
         button.setOnClickListener(this);
 
-        credentialsProvider = new CognitoCachingCredentialsProvider(this,IDENITITY_POOL_ID, Regions.US_EAST_1);
+        //credentialsProvider = new CognitoCredentialsProvider(IDENITITY_POOL_ID, Regions.US_EAST_1);
         apiClientFactory = new ApiClientFactory();
+
         fleetMobileClient = apiClientFactory.build(FleetMobileClient.class);
 
         loginRequest = new LoginRequest();
@@ -89,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void prepareforlocationrequest(){
         locationRequest = getLocationRequest(0); // headoffice
+
 
 
 
@@ -158,10 +168,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         protected void onPostExecute(String s) {
-            System.out.print("******************************** LOGGED IN *************************************");
+            Log.v("FLEETFOOT","******************************** LOGGED IN *************************************");
             textview.setText("Logged IN");
             prepareforlocationrequest();
             super.onPostExecute(s);
+        }
+    }
+
+    private class MenuClassAsyncTask extends AsyncTask<String,String,String>{
+
+        @Override
+        protected String doInBackground(String... strings) {
+            MenuResponse response = fleetMobileClient.menuGet();
+            return null;
         }
     }
 
@@ -171,82 +190,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         protected String doInBackground(String... strings) {
             try {
 
+                developerAuthenticationProvider = new DeveloperAuthenticationProvider(null,IDENITITY_POOL_ID,Regions.US_EAST_1);
 
 
+                HashMap<String,String> logins = new HashMap<>();
+                logins.put(developerAuthenticationProvider.getProviderName(),loginResponse.getToken());
 
+                developerAuthenticationProvider.setCredentials(loginResponse.getIdentityId(),loginResponse.getToken());
 
+                //developerAuthenticationProvider.refresh();
+                // developerAuthenticationProvider.clearCredentials();
+                developerAuthenticationProvider.setLogins(logins);
 
-//        //The existing constructor will work without doing so, but will not use the enhanced flow:
-//       CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
-//                this,
-//                null,
-//                IDENITITY_POOL_ID,
-//                UNAUTH_ROLE,
-//                AUTH_ROLE,
-//                Regions.US_EAST_1);
-//
-//
-//        // If the user is authenticated through login with Amazon, you can set the map
-//        // of token to the provider
-//        Map<String, String> logins = new HashMap<String, String>();
-//        logins.put("dev2.ocatanesofttech.com", loginResponse.getCredentials().getSessionToken());
-//        //credentialsProvider.setLogins(logins);
-//       // credentialsProvider.refresh();
-//        credentialsProvider.withLogins(logins);
-//
-//
-//        fleetCredentialProvider = new FleetCredentialProvider(loginResponse.getCredentials().getAccessKeyId(), loginResponse.getCredentials().getSecretKey(), loginResponse.getCredentials().getSessionToken());
-//
-
-
-
-
-
-
-//
-//        fleetMobileClient = apiClientFactory.build(FleetMobileClient.class);
-//
-////        // If the user is authenticated through login with Amazon, you can set the map
-////        // of token to the provider
-
-
-//        developerAuthenticationProvider = new DeveloperAuthenticationProvider(null,IDENITITY_POOL_ID,Regions.US_EAST_1);
-
-                HashMap<String, String> loginsMap = new HashMap<String, String>();
-                loginsMap.put("dev2.octanesofttech.com", loginResponse.getCredentials().getSessionToken());
-//        developerAuthenticationProvider.setLogins(loginsMap);
-//
-//        developerAuthenticationProvider.setIdenityid(loginResponse.getIdentityId());
-//        developerAuthenticationProvider.setToken(loginResponse.getCredentials().getSessionToken());
-//
-//
-//        developerAuthenticationProvider.refresh();
-
-                //               credentialsProvider.clearCredentials();
-
-//                credentialsProvider = new CognitoCachingCredentialsProvider(getApplicationContext(),IDENITITY_POOL_ID, Regions.US_EAST_1);
-
-                credentialsProvider.setLogins(loginsMap);
+                credentialsProvider = new CognitoCredentialsProvider(developerAuthenticationProvider,Regions.US_EAST_1);
                 credentialsProvider.refresh();
 
-               apiClientFactory.credentialsProvider(credentialsProvider);
-//
-               fleetMobileClient = apiClientFactory.build(FleetMobileClient.class);
-//
-//
-//
-//
-//
-//
-//
 
 
-
+                apiClientFactory.credentialsProvider(credentialsProvider);
+                fleetMobileClient = apiClientFactory.build(FleetMobileClient.class);
 
                 locationResponse = fleetMobileClient.setSessionLocationPost(locationRequest);
 
             }catch (Exception e){
+
                 e.printStackTrace();
+
             }
             return null;
         }
@@ -264,6 +233,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(String s) {
             textview.setText("");
+            new MenuClassAsyncTask().execute();
             super.onPostExecute(s);
         }
     }

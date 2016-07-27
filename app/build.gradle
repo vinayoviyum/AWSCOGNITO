@@ -24,10 +24,12 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:24.0.0'
     // compile files('libs/aws-android-sdk-core-2.2.18.jar')
-    compile files('libs/com.oviyum.fleetfoot-1.0.jar')
-    compile files('libs/gson-2.2.4.jar')
-    compile files('libs/aws-android-sdk-cognito-2.2.21.jar')
-    compile files('libs/aws-android-sdk-cognitoidentityprovider-2.2.21.jar')
-    compile files('libs/aws-android-sdk-core-2.2.21.jar')
-    compile files('libs/aws-android-sdk-apigateway-core-2.2.21.jar')
+    compile 'com.google.code.gson:gson:2.7'
+    compile 'com.amazonaws:aws-android-sdk-core:2.2.+'
+    compile 'com.amazonaws:aws-android-sdk-apigateway-core:2.2.+'
+
+    compile 'com.fasterxml.jackson.core:jackson-core:2.7.3'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.3'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.3'
+    compile files('libs/com.oviyum.fleetfoo-1.0.0.jar')
 }

@@ -9,85 +9,42 @@ import com.amazonaws.regions.Regions;
 public class DeveloperAuthenticationProvider extends AWSAbstractCognitoDeveloperIdentityProvider {
     private static final String DEVLOPER_PROVIDER = "dev2.octanesofttech.com";
 
-    private String idenityID = "";
 
-    private String token = "";
 
     public DeveloperAuthenticationProvider(String accountId, String identityPoolId, Regions region) {
         super(accountId, identityPoolId, region);
     }
 
+
     @Override
     public String getProviderName() {
-        return null;
+        return DEVLOPER_PROVIDER;
     }
 
 
-    public void setIdenityid(String idenityid) {
-        this.identityId = idenityid;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
+    public void setCredentials(String idenityid,String token) {
+        setToken(token);
+        setIdentityId(idenityid);
+        update(idenityid,token);
     }
 
     public String refresh() {
+        update(identityId, token);
+        return token;
 
-        setToken(null);
+    }
 
-        // If the logins map is not empty make a call to your backend
-        // to get the token and identityId
-        if (getProviderName() != null &&
-                !this.loginsMap.isEmpty() &&
-                this.loginsMap.containsKey(getProviderName())) {
-
-            /**
-             * This is where you would call your backend
-             **/
-
-            // now set the returned identity id and token in the provider
-            update(identityId, token);
-            return token;
-
-        } else {
-            // Call getIdentityId method and return null
-            this.getIdentityId();
-            return null;
-        }
+    @Override
+    public String getToken() {
+        return super.getToken();
     }
 
     // If the app has a valid identityId return it, otherwise get a valid
     // identityId from your backend.
 
+
+    @Override
     public String getIdentityId() {
-
-        // Load the identityId from the cache
-        identityId = this.idenityID;
-
-        if (identityId == null) {
-
-            // If the logins map is not empty make a call to your backend
-            // to get the token and identityId
-
-            if (getProviderName() != null && !this.loginsMap.isEmpty()
-                    && this.loginsMap.containsKey(getProviderName())) {
-
-                /**
-                 * This is where you would call your backend
-                 **/
-
-                // now set the returned identity id and token in the provider
-                update(identityId, token);
-                return token;
-
-            } else {
-                // Otherwise call &COG; using getIdentityId of super class
-                return super.getIdentityId();
-            }
-
-        } else {
-            return identityId;
-        }
-
+        return super.getIdentityId();
     }
 }
